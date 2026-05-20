@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: buggybot-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - buggybot-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: buggybot-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/buggybot
+      - NODE_ENV=production
+      - AI_SERVICE_URL=http://ai-service:8000
+      - FRONTEND_URL=http://localhost:3000
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongodb
+    networks:
+      - buggybot-net
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: buggybot-ai-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/app/chroma_db
+      - ./ai-service/data:/app/data
+    env_file:
+      - ./ai-service/.env
+    networks:
+      - buggybot-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: buggybot-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5000
+      - NEXT_PUBLIC_AI_URL=http://ai-service:8000
+    depends_on:
+      - backend
+      - ai-service
+    networks:
+      - buggybot-net
+
+volumes:
+  mongo_data:
+  chroma_data:
+
+networks:
+  buggybot-net:
+    driver: bridge
