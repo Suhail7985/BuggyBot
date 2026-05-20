@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SendHorizonal, Bot, User } from 'lucide-react';
 import { EXAMPLE_QUESTIONS } from '@/constants';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const demoResponses: Record<string, string> = {
   default: `Great question! 🎯 Let me break this down for you.
@@ -93,22 +95,22 @@ export default function DemoChat() {
   return (
     <div className="glass-card overflow-hidden" style={{ height: '520px', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
-        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center text-blue-300">
-          <Bot size={16} />
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5 bg-white/[0.01]">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-md shadow-blue-500/20 animate-pulse">
+          <Bot size={16} className="text-white" />
         </div>
         <div>
           <p className="font-semibold text-sm">BuggyBot</p>
           <p className="text-xs text-[var(--text-muted)]">DSA AI Mentor · Online</p>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs text-green-400">Demo Mode</span>
+        <div className="ml-auto flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-[10px] font-semibold text-green-400 tracking-wider uppercase">Demo Mode</span>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-white/[0.005]">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
             <motion.div
@@ -119,13 +121,21 @@ export default function DemoChat() {
             >
               <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                 msg.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-[var(--bg-card-hover)] border border-white/10 text-[var(--text-secondary)]'
+                  ? 'bg-gradient-to-br from-blue-500 to-violet-600 shadow-md shadow-blue-500/20'
+                  : 'bg-[var(--bg-card-hover)] border border-white/10'
               }`}>
                 {msg.role === 'user' ? <User size={13} /> : <Bot size={13} />}
               </div>
               <div className={msg.role === 'user' ? 'chat-message-user' : 'chat-message-ai'}>
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{msg.content}</pre>
+                {msg.role === 'user' ? (
+                  <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                ) : (
+                  <div className="prose prose-sm max-w-none text-[var(--text-primary)]">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -136,7 +146,7 @@ export default function DemoChat() {
             <div className="w-7 h-7 rounded-full bg-[var(--bg-card-hover)] border border-white/10 flex items-center justify-center">
               <Bot size={13} />
             </div>
-            <div className="chat-message-ai flex items-center gap-1.5">
+            <div className="chat-message-ai flex items-center gap-1.5 py-3">
               <div className="typing-dot" />
               <div className="typing-dot" />
               <div className="typing-dot" />

@@ -77,26 +77,26 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen hero-bg overflow-x-hidden">
       {/* ===== NAVBAR ===== */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(15,15,15,0.95)] border-b border-white/5 backdrop-blur-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#080c18]/80 border-b border-white/5 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="simple-icon text-base font-bold bg-blue-500/10 text-blue-300 border-white/10">
-              B
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <BotMessageSquare size={17} className="text-white" />
             </div>
-            <span className="font-bold text-lg tracking-tight">BuggyBot</span>
-            <span className="hidden sm:block badge-pill">
+            <span className="font-black text-xl tracking-tight">BuggyBot</span>
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400 uppercase tracking-wider">
               Beta
             </span>
           </div>
 
-          <div className="hidden md:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
+          <div className="hidden md:flex items-center gap-6 text-sm text-[var(--text-secondary)] font-medium">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
             <a href="#demo" className="hover:text-white transition-colors">Demo</a>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="btn-ghost text-sm">Sign in</Link>
-            <Link href="/register" className="btn-primary text-sm py-2 px-4">
+            <Link href="/login" className="btn-ghost text-sm font-semibold px-4">Sign in</Link>
+            <Link href="/register" className="btn-primary text-sm py-2.5 px-5">
               Get Started <ArrowRight size={14} />
             </Link>
           </div>
@@ -233,14 +233,22 @@ export default function LandingPage() {
               <motion.div
                 key={feature.title}
                 variants={itemVariants}
-                className={`glass-card p-6 group cursor-default`}
-                style={{ '--glow': feature.glow } as React.CSSProperties}
+                className="glass-card p-7 group cursor-default relative overflow-hidden border border-white/5 hover:border-white/15"
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
               >
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-white/10 flex items-center justify-center mb-4 text-blue-300">
+                {/* Ambient glow backdrop */}
+                <div 
+                  className="absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: feature.glow }}
+                />
+
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-violet-600/10 border border-white/10 flex items-center justify-center mb-5 text-blue-400 group-hover:text-blue-300 group-hover:scale-110 group-hover:border-blue-500/30 transition-all duration-300">
                   {feature.icon}
                 </div>
-                <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
-                <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+                <h3 className="font-bold text-lg mb-2.5 text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-blue-200 transition-all duration-300">
+                  {feature.title}
+                </h3>
+                <p className="text-[var(--text-secondary)] text-sm leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
                   {feature.description}
                 </p>
               </motion.div>

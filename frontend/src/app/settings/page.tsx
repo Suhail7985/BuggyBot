@@ -116,7 +116,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-[var(--text-muted)]">Powered by Google Gemini</p>
                   </div>
                   <span className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                    gemini-1.5-flash
+                    gemini-2.5-flash
                   </span>
                 </div>
               </div>

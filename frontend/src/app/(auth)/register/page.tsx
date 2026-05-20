@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Bot, Eye, EyeOff, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Bot, Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 
@@ -51,32 +51,37 @@ export default function RegisterPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      {/* Logo */}
+      {/* Logo & Headline */}
       <div className="text-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-white/10">
-            <Bot size={24} className="text-blue-300" />
+        <Link href="/" className="inline-flex items-center gap-3 mb-5 group">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center animate-pulse-glow shadow-lg shadow-blue-500/25">
+            <Bot size={26} className="text-white" />
           </div>
+          <span className="font-black text-xl tracking-tight">BuggyBot</span>
         </Link>
-        <h1 className="text-2xl font-bold">Create your account</h1>
-        <p className="text-[var(--text-secondary)] text-sm mt-1">
+        <h1 className="text-3xl font-bold mb-2">Create your account</h1>
+        <p className="text-[var(--text-secondary)] text-sm">
           Start mastering DSA with your AI mentor
         </p>
       </div>
 
       {/* Card */}
-      <div className="glass-card p-8">
+      <div className="glass-card p-8 shadow-2xl border border-white/8">
+        {/* Top gradient line */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-violet-500 to-transparent rounded-full mb-7 -mt-1 opacity-60" />
+
         <form onSubmit={handleSubmit} className="space-y-5" id="register-form">
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-3.5 rounded-xl bg-red-500/8 border border-red-500/20 text-red-400 text-sm text-center flex items-center justify-center gap-2"
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
               {error}
             </motion.div>
           )}
@@ -154,7 +159,7 @@ export default function RegisterPage() {
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">
                   Password strength:{' '}
-                  <span className={`font-medium ${strength >= 4 ? 'text-green-400' : strength >= 3 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <span className={`font-semibold ${strength >= 4 ? 'text-green-400' : strength >= 3 ? 'text-yellow-400' : 'text-red-400'}`}>
                     {strengthLabels[strength]}
                   </span>
                 </p>
@@ -163,9 +168,9 @@ export default function RegisterPage() {
           </div>
 
           {/* Benefits */}
-          <div className="flex flex-col gap-2 py-2">
+          <div className="flex flex-col gap-2.5 py-2.5 bg-white/[0.02] border border-white/5 rounded-xl px-4">
             {['Free forever plan', 'Grokking Algorithms pre-loaded', 'Unlimited chat history'].map((b) => (
-              <div key={b} className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+              <div key={b} className="flex items-center gap-2.5 text-xs text-[var(--text-secondary)]">
                 <CheckCircle2 size={14} className="text-green-400 flex-shrink-0" />
                 {b}
               </div>
@@ -176,7 +181,7 @@ export default function RegisterPage() {
             id="register-submit"
             type="submit"
             disabled={loading}
-            className="btn-primary w-full py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="btn-primary w-full py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
             {loading ? (
               <><Loader2 size={16} className="animate-spin" /> Creating account...</>
@@ -188,11 +193,19 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+          <Link href="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
             Sign in
           </Link>
         </div>
+
+        {/* Feature hints */}
+        <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-[var(--text-muted)]">
+          <Sparkles size={12} className="text-blue-400" />
+          Powered by Gemini AI · Grokking Algorithms · RAG
+        </div>
       </div>
     </motion.div>
+  );
+}
   );
 }

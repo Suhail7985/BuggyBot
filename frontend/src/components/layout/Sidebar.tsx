@@ -86,21 +86,21 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      <aside className={`sidebar fixed md:relative z-40 transition-transform duration-300 ${
+      <aside className={`sidebar fixed md:relative z-40 transition-transform duration-300 bg-[var(--bg-secondary)] border-r border-white/5 flex flex-col h-screen overflow-hidden ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
         {/* Header */}
-        <div className="p-4 border-b border-white/5 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-white/10 flex items-center justify-center text-blue-300">
-              <Bot size={14} />
+        <div className="p-4.5 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200">
+              <Bot size={15} className="text-white" />
             </div>
-            <span className="font-bold text-sm">BuggyBot</span>
+            <span className="font-black text-sm tracking-tight text-white group-hover:text-blue-400 transition-colors">BuggyBot</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -111,28 +111,28 @@ export default function Sidebar() {
         </div>
 
         {/* New Chat Button */}
-        <div className="p-3">
+        <div className="p-4">
           <button
             onClick={handleNewChat}
             id="new-chat-btn"
-            className="btn-primary w-full py-2.5 text-sm"
+            className="btn-primary w-full py-2.5 text-sm shadow-md hover:shadow-blue-500/10 font-semibold"
           >
-            <Plus size={16} /> New Chat
+            <Plus size={16} className="stroke-[3]" /> New Chat
           </button>
         </div>
 
         {/* Chat List */}
-        <div className="flex-1 overflow-y-auto px-2 pb-2">
+        <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-4">
           {chats.length === 0 ? (
-            <div className="text-center py-8 text-[var(--text-muted)] text-xs">
-              <MessageSquare size={24} className="mx-auto mb-2 opacity-30" />
+            <div className="text-center py-12 text-[var(--text-muted)] text-xs">
+              <MessageSquare size={20} className="mx-auto mb-2.5 opacity-20" />
               No chats yet. Start a new conversation!
             </div>
           ) : (
             <>
               {groupedChats.today.length > 0 && (
-                <div className="mb-3">
-                  <p className="text-xs text-[var(--text-muted)] px-2 py-1 font-medium uppercase tracking-wider">Today</p>
+                <div>
+                  <p className="text-[10px] text-[var(--text-muted)] px-3 py-1.5 font-bold uppercase tracking-widest bg-white/[0.01] rounded-md mb-1.5">Today</p>
                   {groupedChats.today.map((chat) => (
                     <ChatItem
                       key={chat._id}
@@ -152,7 +152,7 @@ export default function Sidebar() {
               )}
               {groupedChats.earlier.length > 0 && (
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] px-2 py-1 font-medium uppercase tracking-wider">Earlier</p>
+                  <p className="text-[10px] text-[var(--text-muted)] px-3 py-1.5 font-bold uppercase tracking-widest bg-white/[0.01] rounded-md mb-1.5">Earlier</p>
                   {groupedChats.earlier.map((chat) => (
                     <ChatItem
                       key={chat._id}
@@ -175,25 +175,25 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom Nav */}
-        <div className="border-t border-white/5 p-3 space-y-1">
-          <Link href="/upload" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-sm">
-            <Upload size={15} />Upload Book
+        <div className="border-t border-white/5 p-3 space-y-1 bg-white/[0.005]">
+          <Link href="/upload" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-xs font-semibold">
+            <Upload size={14} className="opacity-70" />Upload Book
           </Link>
-          <Link href="/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-sm">
-            <Settings size={15} />Settings
+          <Link href="/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-xs font-semibold">
+            <Settings size={14} className="opacity-70" />Settings
           </Link>
 
           {/* User */}
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg mt-2 border-t border-white/5 pt-3">
-            <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-white/10 flex items-center justify-center text-xs font-bold text-blue-300 flex-shrink-0">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-2 border-t border-white/5 pt-3.5 bg-white/[0.01]">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 border border-blue-500/20 flex items-center justify-center text-xs font-black text-blue-400 flex-shrink-0">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{user?.name || 'User'}</p>
-              <p className="text-xs text-[var(--text-muted)] truncate">{user?.email}</p>
+              <p className="text-xs font-bold truncate text-white leading-none mb-0.5">{user?.name || 'User'}</p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate leading-none">{user?.email}</p>
             </div>
-            <button onClick={handleLogout} className="btn-ghost p-1 text-[var(--text-muted)] hover:text-red-400" title="Logout">
-              <LogOut size={14} />
+            <button onClick={handleLogout} className="btn-ghost p-1.5 text-[var(--text-muted)] hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all" title="Logout">
+              <LogOut size={13} />
             </button>
           </div>
         </div>
@@ -222,13 +222,13 @@ function ChatItem({
   return (
     <Link
       href={`/chat/${chat._id}`}
-      className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all mb-0.5 ${
+      className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all mb-1 border ${
         isActive
-          ? 'bg-blue-500/10 border border-blue-500/20 text-white'
-          : 'text-[var(--text-secondary)] hover:bg-white/5 hover:text-white'
+          ? 'bg-blue-500/10 border-blue-500/25 text-white shadow-sm shadow-blue-500/5'
+          : 'border-transparent text-[var(--text-secondary)] hover:bg-white/5 hover:text-white'
       }`}
     >
-      <MessageSquare size={13} className="flex-shrink-0 opacity-60" />
+      <MessageSquare size={13} className={`flex-shrink-0 ${isActive ? 'text-blue-400 opacity-100' : 'opacity-50 group-hover:opacity-85'}`} />
 
       {isRenaming ? (
         <div className="flex-1 flex items-center gap-1" onClick={(e) => e.preventDefault()}>
@@ -251,7 +251,7 @@ function ChatItem({
         </div>
       ) : (
         <>
-          <span className="flex-1 truncate text-xs">{chat.title}</span>
+          <span className="flex-1 truncate">{chat.title}</span>
           <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
             <button
               onClick={(e) => onStartRename(chat, e)}
