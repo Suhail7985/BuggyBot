@@ -1,14 +1,17 @@
 """List available OpenAI models (dev utility)."""
 import os
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-api_key = os.getenv("OPENAI_API_KEY")
+if not GEMINI_API_KEY and not OPENAI_API_KEY:
+    raise SystemExit("Missing AI API keys")
+
+api_key = OPENAI_API_KEY
 if not api_key:
-    raise SystemExit("Set OPENAI_API_KEY in ai-service/.env")
+    raise SystemExit("Missing AI API keys")
 
 client = OpenAI(api_key=api_key)
 models = client.models.list()

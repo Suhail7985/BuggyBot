@@ -45,7 +45,7 @@ Have these ready:
 1. Open [dashboard.render.com](https://dashboard.render.com) and sign in with **GitHub**.
 2. Click **New +** → **Blueprint**.
 3. Connect repository **Suhail7985/BuggyBot**.
-4. Render reads `render.yaml` and shows **buggybot-api** and **buggybot-ai**.
+4. Render reads `render.yml` (at repo root) and shows **buggybot-api** and **buggybot-ai**.
 5. Click **Apply** / **Create**.
 6. When asked for secrets on **buggybot-ai**, set:
    - `GEMINI_API_KEY` = your key (from local `ai-service/.env`)

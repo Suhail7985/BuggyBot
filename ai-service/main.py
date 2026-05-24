@@ -10,9 +10,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from dotenv import load_dotenv
 
-load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+if not GEMINI_API_KEY and not OPENAI_API_KEY:
+    raise Exception("Missing AI API keys")
 
 from routers import pdf, rag
 from services.pdf_processor import extract_text_from_pdf

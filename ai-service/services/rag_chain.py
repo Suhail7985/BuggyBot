@@ -90,23 +90,22 @@ async def rag_stream(
         hint = str(e).strip()
         if "API key" in hint or "OPENAI_API_KEY" in hint or "GEMINI_API_KEY" in hint:
             error_msg = (
-                "**Configuration error:** Add `OPENAI_API_KEY` or `GEMINI_API_KEY` "
-                "to `ai-service/.env`, then restart the AI service."
+                "**AI service configuration error:** The hosted AI service is not configured correctly. "
+                "Check `https://buggybot-ai.onrender.com/health` and the Render environment variables, then try again."
             )
         elif "429" in hint or "quota" in hint.lower() or "RESOURCE_EXHAUSTED" in hint:
             error_msg = (
-                "**API quota exceeded.** Wait a minute and try again, or add `OPENAI_API_KEY` "
-                "to `ai-service/.env` and restart the service."
+                "**AI service quota exceeded.** Wait a minute and try again, or check the hosted service limits on Render."
             )
         elif "404" in hint and "model" in hint.lower():
             error_msg = (
-                "**Invalid model.** Set `GEMINI_MODEL=gemini-2.5-flash` in `ai-service/.env` "
-                "and restart the AI service."
+                "**AI model error:** The hosted AI service is using an invalid model setting. "
+                "Check the Render environment variables and redeploy the AI service."
             )
         else:
             error_msg = (
                 "Unable to complete this request due to a service error. "
-                "Please try again in a moment."
+                "Verify `https://buggybot-ai.onrender.com/health` and try again in a moment."
             )
         yield f"data: {json.dumps({'type': 'token', 'content': error_msg})}\n\n"
 
