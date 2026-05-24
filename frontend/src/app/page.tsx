@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { BotMessageSquare, Brain, Zap, BookOpen, ArrowRight, FileSearch } from 'lucide-react';
 import DemoChat from '@/components/landing/DemoChat';
@@ -28,6 +29,10 @@ const features = [
 ];
 
 export default function LandingPage() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
+
   return (
     <div className="min-h-screen hero-bg">
       <header className="landing-nav">
