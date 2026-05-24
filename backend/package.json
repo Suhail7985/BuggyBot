@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "BuggyBot AI DSA Mentor - Backend API",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "build": "tsc",
