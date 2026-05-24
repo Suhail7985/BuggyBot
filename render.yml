@@ -1,0 +1,46 @@
+# Render Blueprint (required filename: render.yml at repo root)
+# Synced with render.yaml — edit both if you change services.
+
+services:
+  - type: web
+    name: buggybot-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci --include=dev && npm run build && npm prune --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: AI_SERVICE_URL
+        sync: false
+
+  - type: web
+    name: buggybot-ai
+    runtime: docker
+    region: oregon
+    plan: free
+    rootDir: ai-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: CHROMA_DB_PATH
+        value: /app/chroma_db
+      - key: PRELOAD_COLLECTION_NAME
+        value: grokking_algorithms
