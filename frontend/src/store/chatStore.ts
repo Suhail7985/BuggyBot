@@ -64,7 +64,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   commitStreamingMessage: (citations) => {
     const { streamingMessage, activeChat, pendingCitations } = get();
-    if (!streamingMessage || !activeChat) return;
+
+    if (!activeChat) {
+      set({ streamingMessage: '', isStreaming: false, pendingCitations: [] });
+      return;
+    }
+
+    if (!streamingMessage?.trim()) {
+      set({ streamingMessage: '', isStreaming: false, pendingCitations: [] });
+      return;
+    }
 
     const assistantMessage: Message = {
       role: 'assistant',

@@ -28,10 +28,17 @@ export const verifyRefreshToken = (token: string): TokenPayload => {
   return jwt.verify(token, config.jwt.refreshSecret) as TokenPayload;
 };
 
+const isProd = process.env.NODE_ENV === 'production';
+/** Cross-site cookies when frontend (Vercel) and API (Render/Railway) use different domains. */
+const crossSite =
+  isProd &&
+  config.frontendUrl.startsWith('https://') &&
+  !config.frontendUrl.includes('localhost');
+
 export const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: isProd,
+  sameSite: (crossSite ? 'none' : 'lax') as 'lax' | 'none' | 'strict',
   path: '/',
 };
 

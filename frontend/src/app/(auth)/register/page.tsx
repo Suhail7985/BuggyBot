@@ -3,23 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Bot, Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Bot, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
-
-const passwordStrength = (pass: string) => {
-  let strength = 0;
-  if (pass.length >= 6) strength++;
-  if (pass.length >= 10) strength++;
-  if (/[A-Z]/.test(pass)) strength++;
-  if (/[0-9]/.test(pass)) strength++;
-  if (/[^A-Za-z0-9]/.test(pass)) strength++;
-  return strength;
-};
-
-const strengthColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
-const strengthLabels = ['', 'Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,13 +15,17 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const strength = passwordStrength(form.password);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (form.name.length < 2) { setError('Name must be at least 2 characters.'); return; }
-    if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (form.name.length < 2) {
+      setError('Name must be at least 2 characters.');
+      return;
+    }
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
     setLoading(true);
     try {
       const user = await authService.register(form);
@@ -50,45 +40,29 @@ export default function RegisterPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-    >
-      {/* Logo & Headline */}
+    <div>
       <div className="text-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-3 mb-5 group">
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center animate-pulse-glow shadow-lg shadow-blue-500/25">
-            <Bot size={26} className="text-white" />
+        <Link href="/" className="inline-flex items-center gap-2 mb-6">
+          <div className="message-avatar assistant w-9 h-9">
+            <Bot size={18} />
           </div>
-          <span className="font-black text-xl tracking-tight">BuggyBot</span>
+          <span className="font-semibold">BuggyBot</span>
         </Link>
-        <h1 className="text-3xl font-bold mb-2">Create your account</h1>
-        <p className="text-[var(--text-secondary)] text-sm">
-          Start mastering DSA with your AI mentor
-        </p>
+        <h1 className="text-2xl font-semibold mb-1">Create account</h1>
+        <p className="text-sm text-[var(--text-secondary)]">Start learning with structured AI tutoring</p>
       </div>
 
-      {/* Card */}
-      <div className="glass-card p-8 shadow-2xl border border-white/8">
-        {/* Top gradient line */}
-        <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-violet-500 to-transparent rounded-full mb-7 -mt-1 opacity-60" />
-
-        <form onSubmit={handleSubmit} className="space-y-5" id="register-form">
+      <div className="surface-card">
+        <form onSubmit={handleSubmit} className="space-y-4" id="register-form">
           {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-3.5 rounded-xl bg-red-500/8 border border-red-500/20 text-red-400 text-sm text-center flex items-center justify-center gap-2"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+            <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
               {error}
-            </motion.div>
+            </p>
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
-              Full Name
+            <label htmlFor="register-name" className="block text-xs text-[var(--text-muted)] mb-1.5">
+              Full name
             </label>
             <input
               id="register-name"
@@ -104,8 +78,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
-              Email address
+            <label htmlFor="register-email" className="block text-xs text-[var(--text-muted)] mb-1.5">
+              Email
             </label>
             <input
               id="register-email"
@@ -120,14 +94,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
+            <label htmlFor="register-password" className="block text-xs text-[var(--text-muted)] mb-1.5">
               Password
             </label>
             <div className="relative">
               <input
                 id="register-password"
                 type={showPass ? 'text' : 'password'}
-                className="input-field pr-12"
+                className="input-field pr-10"
                 placeholder="Min. 6 characters"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -138,74 +112,33 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-
-            {/* Password strength */}
-            {form.password && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
-                <div className="flex gap-1 mb-1">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                        level <= strength ? strengthColors[strength] : 'bg-white/10'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-[var(--text-muted)]">
-                  Password strength:{' '}
-                  <span className={`font-semibold ${strength >= 4 ? 'text-green-400' : strength >= 3 ? 'text-yellow-400' : 'text-red-400'}`}>
-                    {strengthLabels[strength]}
-                  </span>
-                </p>
-              </motion.div>
-            )}
           </div>
 
-          {/* Benefits */}
-          <div className="flex flex-col gap-2.5 py-2.5 bg-white/[0.02] border border-white/5 rounded-xl px-4">
-            {['Free forever plan', 'Grokking Algorithms pre-loaded', 'Unlimited chat history'].map((b) => (
-              <div key={b} className="flex items-center gap-2.5 text-xs text-[var(--text-secondary)]">
-                <CheckCircle2 size={14} className="text-green-400 flex-shrink-0" />
-                {b}
-              </div>
-            ))}
-          </div>
-
-          <button
-            id="register-submit"
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-          >
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-2" id="register-submit">
             {loading ? (
-              <><Loader2 size={16} className="animate-spin" /> Creating account...</>
+              <>
+                <Loader2 size={16} className="animate-spin" /> Creating account…
+              </>
             ) : (
-              <>Create Free Account <ArrowRight size={16} /></>
+              <>
+                Create account <ArrowRight size={16} />
+              </>
             )}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
+        <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
+          <Link href="/login" className="text-[var(--brand-400)] hover:underline font-medium">
             Sign in
           </Link>
-        </div>
-
-        {/* Feature hints */}
-        <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-[var(--text-muted)]">
-          <Sparkles size={12} className="text-blue-400" />
-          Powered by Gemini AI · Grokking Algorithms · RAG
-        </div>
+        </p>
       </div>
-    </motion.div>
-  );
-}
+    </div>
   );
 }

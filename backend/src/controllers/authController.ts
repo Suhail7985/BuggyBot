@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../middleware/authMiddleware';
 import { User } from '../models/User';
 import {
   signAccessToken,
@@ -139,6 +140,45 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     });
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+  }
+};
+
+const updateProfileSchema = z.object({
+  name: z.string().min(2).max(50),
+});
+
+export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const parsed = updateProfileSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: 'Validation failed', errors: parsed.error.issues });
+      return;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { name: parsed.data.name },
+      { new: true }
+    );
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };
 

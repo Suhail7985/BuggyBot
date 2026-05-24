@@ -1,15 +1,19 @@
 import type { NextConfig } from 'next';
 
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+
 const nextConfig: NextConfig = {
+  output: 'standalone',
   async rewrites() {
     return [
       {
         source: '/api/backend/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
       {
         source: '/api/ai/:path*',
-        destination: 'http://localhost:8000/api/:path*',
+        destination: `${aiServiceUrl}/api/:path*`,
       },
     ];
   },

@@ -3,7 +3,7 @@ import json
 from typing import AsyncGenerator, List, Dict, Any
 from services.vector_store import semantic_search, collection_exists
 from services.llm import generate_streaming_response
-from prompts.system_prompt import get_prompt
+from prompts.system_prompt import get_prompt_parts
 from models.schemas import Citation
 
 
@@ -58,7 +58,11 @@ async def rag_stream(
 
         context = "\n\n---\n\n".join(context_parts)
     else:
-        context = "No relevant content found in the uploaded material."
+        context = (
+            "No excerpts were retrieved from the knowledge base. "
+            "Answer using standard computer science references. "
+            "State clearly that source citations are unavailable until course material is indexed."
+        )
         citations = []
 
     # Step 3: Build chat history string
@@ -66,12 +70,12 @@ async def rag_stream(
     if chat_history:
         history_parts = []
         for msg in chat_history[-6:]:  # Last 3 exchanges
-            role = "Student" if msg["role"] == "user" else "BuggyBot"
+            role = "User" if msg["role"] == "user" else "Assistant"
             history_parts.append(f"{role}: {msg['content'][:500]}")
         history_str = "\n".join(history_parts)
 
-    # Step 4: Build the full prompt
-    prompt = get_prompt(mode, context, message, history_str)
+    # Step 4: Build system + user messages for the model
+    system_prompt, user_message = get_prompt_parts(mode, context, message, history_str)
 
     # Step 5: Send citations first
     if citations:
@@ -79,10 +83,31 @@ async def rag_stream(
 
     # Step 6: Stream LLM response
     try:
-        async for token in generate_streaming_response(prompt):
+        async for token in generate_streaming_response(system_prompt, user_message):
             yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
     except Exception as e:
-        error_msg = f"I encountered an error generating a response: {str(e)}"
+        print(f"[RAG] LLM error: {e}")
+        hint = str(e).strip()
+        if "API key" in hint or "OPENAI_API_KEY" in hint or "GEMINI_API_KEY" in hint:
+            error_msg = (
+                "**Configuration error:** Add `OPENAI_API_KEY` or `GEMINI_API_KEY` "
+                "to `ai-service/.env`, then restart the AI service."
+            )
+        elif "429" in hint or "quota" in hint.lower() or "RESOURCE_EXHAUSTED" in hint:
+            error_msg = (
+                "**API quota exceeded.** Wait a minute and try again, or add `OPENAI_API_KEY` "
+                "to `ai-service/.env` and restart the service."
+            )
+        elif "404" in hint and "model" in hint.lower():
+            error_msg = (
+                "**Invalid model.** Set `GEMINI_MODEL=gemini-2.5-flash` in `ai-service/.env` "
+                "and restart the AI service."
+            )
+        else:
+            error_msg = (
+                "Unable to complete this request due to a service error. "
+                "Please try again in a moment."
+            )
         yield f"data: {json.dumps({'type': 'token', 'content': error_msg})}\n\n"
 
     yield "data: [DONE]\n\n"

@@ -94,7 +94,7 @@ export const createChat = async (req: AuthRequest, res: Response, next: NextFunc
 
     } catch (aiError) {
       // Fallback if AI service is down
-      const fallback = "I'm BuggyBot, your DSA mentor! The AI service is currently starting up. Please try again in a moment.";
+      const fallback = "The learning assistant is temporarily unavailable. Please try again in a moment.";
       chat.messages.push({ role: 'assistant', content: fallback, createdAt: new Date() });
       await chat.save();
 
@@ -185,7 +185,7 @@ export const continueChat = async (req: AuthRequest, res: Response, next: NextFu
       });
 
     } catch {
-      const fallback = "I'm having trouble connecting to the AI service. Please try again.";
+      const fallback = "Unable to reach the learning assistant. Please try again shortly.";
       chat.messages.push({ role: 'assistant', content: fallback, createdAt: new Date() });
       await chat.save();
       res.write(`data: ${JSON.stringify({ type: 'token', content: fallback })}\n\n`);

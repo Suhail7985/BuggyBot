@@ -7,13 +7,13 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500', '600'] });
 
 export const metadata: Metadata = {
-  title: 'BuggyBot — Your DSA AI Mentor',
-  description: 'Master Data Structures & Algorithms with BuggyBot, your chaotic but genius AI tutor powered by Grokking Algorithms.',
+  title: 'BuggyBot — DSA Learning Assistant',
+  description: 'Professional AI tutor for data structures, algorithms, and debugging — structured explanations powered by OpenAI.',
   keywords: ['DSA', 'algorithms', 'AI tutor', 'data structures', 'grokking algorithms', 'binary search', 'BFS', 'DFS'],
   authors: [{ name: 'BuggyBot' }],
   openGraph: {
-    title: 'BuggyBot — Your DSA AI Mentor',
-    description: 'Master DSA without losing your mind.',
+    title: 'BuggyBot — DSA Learning Assistant',
+    description: 'Professional AI tutoring for data structures and algorithms.',
     type: 'website',
   },
 };

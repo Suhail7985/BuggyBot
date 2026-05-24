@@ -1,15 +1,22 @@
-import { Bot } from 'lucide-react';
+'use client';
 
-export default function TypingIndicator() {
+import { Bot, Loader2 } from 'lucide-react';
+
+interface TypingIndicatorProps {
+  label?: string;
+}
+
+export default function TypingIndicator({ label = 'Analyzing…' }: TypingIndicatorProps) {
   return (
-    <div className="flex gap-3 items-start">
-      <div className="w-8 h-8 rounded-xl bg-[var(--bg-card-hover)] border border-white/10 flex items-center justify-center flex-shrink-0 text-blue-400">
-        <Bot size={15} />
+    <div className="message-row">
+      <div className="message-avatar assistant">
+        <Bot size={14} />
       </div>
-      <div className="chat-message-ai flex items-center gap-1.5 py-3">
-        <div className="typing-dot" />
-        <div className="typing-dot" />
-        <div className="typing-dot" />
+      <div className="message-body">
+        <div className="analyzing-status">
+          <Loader2 size={14} className="analyzing-spinner" aria-hidden />
+          <span>{label}</span>
+        </div>
       </div>
     </div>
   );

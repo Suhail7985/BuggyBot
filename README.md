@@ -1,111 +1,96 @@
-# 🤖 BuggyBot — Your Chaotic but Genius DSA AI Mentor
+# BuggyBot — AI-Powered DSA Learning Assistant
 
-> **Master Data Structures & Algorithms without losing your mind.**
+> **Professional AI tutoring for data structures, algorithms, and debugging.**
 
-BuggyBot is a production-grade AI-powered full-stack web application that answers DSA questions strictly from **Grokking Algorithms by Aditya Bhargava** using **RAG (Retrieval-Augmented Generation)** architecture.
-
----
-
-## ✨ Features
-
-- 🧠 **AI Tutor** — Context-aware answers grounded in Grokking Algorithms
-- 💬 **Streaming Chat** — ChatGPT-like streaming responses with typing animation
-- 📚 **Source Citations** — Every answer cites chapter, page & excerpt
-- ⚡ **Complexity Analyzer** — Big O analysis with best/average/worst cases
-- 🎯 **Quiz Generator** — MCQs, flashcards & interview prep
-- 📄 **PDF Upload** — Upload any DSA book and chat with it
-- 🔐 **Auth System** — JWT with httpOnly cookies, register/login/logout
-- 🌙 **Premium Dark UI** — Glassmorphism, gradients, Framer Motion animations
+BuggyBot is a full-stack learning assistant built with **Next.js**, **TypeScript**, **Express.js**, and the **OpenAI API**. It helps users understand debugging concepts, algorithms, and DSA problems with context-aware, streaming responses grounded in uploaded textbooks (e.g. *Grokking Algorithms*) via **RAG**.
 
 ---
 
-## 🏗️ Architecture
+## Features
+
+- **Interactive chat** — ChatGPT-style streaming UI for DSA questions
+- **OpenAI integration** — Context-aware tutoring with `gpt-4o-mini` + embeddings
+- **RAG pipeline** — ChromaDB retrieval with chapter/page citations
+- **Quiz & complexity modes** — MCQs and Big O analysis
+- **PDF upload** — Chat with your own DSA books
+- **Auth** — JWT in httpOnly cookies (register / login / saved history)
+- **CI/CD** — GitHub Actions for build/test; Vercel for frontend deploy
+
+---
+
+## Architecture
 
 ```
-Frontend (Next.js 16)  →  Backend (Express.js)  →  AI Service (FastAPI)
+Frontend (Next.js)  →  Backend (Express.js)  →  AI Service (FastAPI)
      :3000                      :5000                      :8000
                                   ↓                           ↓
                               MongoDB                     ChromaDB
                            (Users/Chats)              (Vector Embeddings)
 ```
 
-**AI Stack:** Gemini 1.5 Flash + text-embedding-004 + LangChain + ChromaDB
+**Tech stack:** Next.js, TypeScript, React, Node.js, Express.js, REST APIs, OpenAI API, GitHub Actions, Vercel, FastAPI, LangChain, ChromaDB
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
+
 - Node.js 20+
 - Python 3.11+
-- MongoDB (local or Atlas)
-- Google Gemini API key ([get free key](https://aistudio.google.com/app/apikey))
+- MongoDB (local or [Atlas](https://www.mongodb.com/atlas))
+- [OpenAI API key](https://platform.openai.com/api-keys)
 
----
-
-### 1. Clone & Setup
-
-```bash
-git clone https://github.com/yourusername/buggybot.git
-cd buggybot
-```
-
----
-
-### 2. Backend Setup
+### 1. Backend
 
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env with your MongoDB URI and secrets
+# Edit .env — MongoDB URI, JWT secrets
 npm install
 npm run dev
 ```
 
-Backend runs on **http://localhost:5000**
+Runs at **http://localhost:5000**
 
----
-
-### 3. AI Service Setup
+### 2. AI Service
 
 ```bash
 cd ai-service
 cp .env.example .env
-# Add your GEMINI_API_KEY to .env
+# Add OPENAI_API_KEY to .env
+# Optional: place grokking_algorithms.pdf in ai-service/data/
 
-# Place Grokking Algorithms PDF:
-# Copy your PDF to: ai-service/data/grokking_algorithms.pdf
-
-# Create virtual environment
 python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Mac/Linux
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS/Linux
 
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-AI Service runs on **http://localhost:8000**
-- Auto-loads Grokking Algorithms on first startup
-- API docs at http://localhost:8000/docs
+Runs at **http://localhost:8000** · API docs at `/docs`
 
----
-
-### 4. Frontend Setup
+### 3. Frontend
 
 ```bash
 cd frontend
+cp .env.example .env.local   # optional; defaults to localhost
 npm install
 npm run dev
 ```
 
-Frontend runs on **http://localhost:3000**
+Runs at **http://localhost:3000**
+
+- **Landing demo** — try chat on `/` without signing in
+- **Full app** — register, then use `/dashboard` for saved chats
 
 ---
 
-### 5. Environment Variables
+## Environment Variables
 
 **backend/.env**
+
 ```env
 MONGODB_URI=mongodb://localhost:27017/buggybot
 JWT_SECRET=your-secret-min-32-chars
@@ -116,79 +101,81 @@ FRONTEND_URL=http://localhost:3000
 ```
 
 **ai-service/.env**
+
 ```env
-GEMINI_API_KEY=your-gemini-api-key-here
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-4o-mini
 CHROMA_DB_PATH=./chroma_db
-PRELOAD_PDF_PATH=./data/grokking_algorithms.pdf
 PRELOAD_COLLECTION_NAME=grokking_algorithms
 ```
 
----
+**frontend/.env.local** (production / Vercel)
 
-## 🐳 Docker (All-in-One)
-
-```bash
-# Copy env files first
-cp backend/.env.example backend/.env
-cp ai-service/.env.example ai-service/.env
-# Edit both .env files with your secrets
-
-# Place PDF at: ai-service/data/grokking_algorithms.pdf
-
-docker-compose up --build
-```
-
-All services start automatically. Visit **http://localhost:3000**
-
----
-
-## 📁 Project Structure
-
-```
-BuggyBot/
-├── frontend/          # Next.js 16 + React 19 + TypeScript + Tailwind v4
-├── backend/           # Express.js + TypeScript + MongoDB + JWT
-├── ai-service/        # FastAPI + LangChain + ChromaDB + Gemini
-│   └── data/          # Place grokking_algorithms.pdf here
-└── docker-compose.yml
+```env
+BACKEND_URL=https://your-backend.example.com
+AI_SERVICE_URL=https://your-ai-service.example.com
 ```
 
 ---
 
-## 🔌 API Reference
+## Deployment (Vercel + CI/CD)
+
+| Step | Platform |
+|------|----------|
+| Frontend | **Vercel** (root dir: `frontend`) |
+| API + AI | **Render** via `render.yaml` |
+| Database | **MongoDB Atlas** |
+
+Full guide: **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+**Quick Vercel env vars:**
+
+```env
+BACKEND_URL=https://your-api.onrender.com
+AI_SERVICE_URL=https://your-ai.onrender.com
+```
+
+GitHub Actions: **CI** on every PR/push · **Deploy to Vercel** on `main` (optional secrets).
+
+---
+
+## API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Create account |
 | POST | `/api/auth/login` | Login |
-| GET | `/api/auth/me` | Get current user |
-| POST | `/api/chat` | Start new chat (SSE stream) |
-| POST | `/api/chat/:id/message` | Continue chat (SSE stream) |
-| GET | `/api/chat/history` | Get all chats |
-| DELETE | `/api/chat/:id` | Delete chat |
+| GET | `/api/auth/me` | Current user |
+| PATCH | `/api/auth/profile` | Update profile |
+| POST | `/api/chat` | New chat (SSE) |
+| POST | `/api/chat/:id/message` | Continue chat (SSE) |
+| GET | `/api/chat/history` | List chats |
 | POST | `/api/upload/pdf` | Upload PDF |
-| POST | `/api/ai/rag/chat` | Direct RAG query |
+| POST | `/api/rag/chat` | Direct RAG stream (AI service) |
 
 ---
 
-## 🛠️ Tech Stack
+## Project Structure
 
-| Layer | Tech |
-|-------|------|
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind v4, Framer Motion, Zustand |
-| Backend | Express.js, TypeScript, Mongoose, JWT, Zod |
-| AI Service | FastAPI, LangChain, Gemini 1.5 Flash, ChromaDB, pdfplumber |
-| Database | MongoDB, ChromaDB |
-| DevOps | Docker, docker-compose |
-
----
-
-## 🤖 Chat Modes
-
-- **💬 Chat** — Ask anything about DSA from the book
-- **🧠 Quiz** — Generate MCQs and practice problems
-- **⚡ Complexity** — Get Big O analysis tables
+```
+BuggyBot/
+├── frontend/          # Next.js 16 + React 19 + TypeScript
+├── backend/           # Express.js + MongoDB + JWT
+├── ai-service/        # FastAPI + OpenAI + ChromaDB
+├── .github/workflows/ # CI + optional Vercel deploy
+└── docker-compose.yml
+```
 
 ---
 
-Built with ❤️ using Next.js, FastAPI & Google Gemini
+## Docker
+
+```bash
+cp backend/.env.example backend/.env
+cp ai-service/.env.example ai-service/.env
+docker-compose up --build
+```
+
+---
+
+Built with Next.js, Express.js, and OpenAI.

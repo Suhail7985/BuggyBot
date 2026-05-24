@@ -2,7 +2,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
 export const AI_SERVICE_URL = process.env.NEXT_PUBLIC_AI_URL || 'http://localhost:8000';
 
 export const APP_NAME = 'BuggyBot';
-export const APP_TAGLINE = 'Your chaotic but genius DSA AI mentor';
+export const APP_TAGLINE = 'Professional AI tutor for data structures and algorithms';
 
 export const DSA_TOPICS = [
   'Binary Search',
@@ -21,16 +21,16 @@ export const DSA_TOPICS = [
 ];
 
 export const CHAT_MODES = {
-  chat: { label: 'Chat', icon: '💬', description: 'Ask anything about DSA' },
-  quiz: { label: 'Quiz Me', icon: '🧠', description: 'Generate MCQs and practice' },
-  complexity: { label: 'Complexity', icon: '⚡', description: 'Analyze Big O notation' },
+  chat: { label: 'Chat', description: 'Concept explanations and problem solving' },
+  quiz: { label: 'Quiz', description: 'Structured practice questions' },
+  complexity: { label: 'Complexity', description: 'Big O and performance analysis' },
 } as const;
 
 export const EXAMPLE_QUESTIONS = [
-  'What is binary search and how does it work?',
-  'Explain BFS vs DFS with a real-world analogy',
-  'What is the time complexity of quicksort?',
-  'How does Dijkstra\'s algorithm find the shortest path?',
-  'Can you quiz me on dynamic programming?',
-  'Explain recursion like I\'m 10 years old',
+  'Explain binary search: approach, complexity, and a Python implementation.',
+  'Compare breadth-first and depth-first search for graphs.',
+  'What is the time and space complexity of merge sort?',
+  'How does Dijkstra\'s algorithm guarantee shortest paths on weighted graphs?',
+  'Generate five quiz questions on dynamic programming.',
+  'Walk through the two-pointer technique with an example.',
 ];

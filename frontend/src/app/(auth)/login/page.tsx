@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Bot, Eye, EyeOff, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { Bot, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 
@@ -33,45 +32,29 @@ export default function LoginPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-    >
-      {/* Logo & headline */}
+    <div>
       <div className="text-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-3 mb-5 group">
-          <div className="w-13 h-13 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-white/10">
-            <Bot size={26} className="text-blue-300" />
+        <Link href="/" className="inline-flex items-center gap-2 mb-6">
+          <div className="message-avatar assistant w-9 h-9">
+            <Bot size={18} />
           </div>
-          <span className="font-black text-xl tracking-tight">BuggyBot</span>
+          <span className="font-semibold">BuggyBot</span>
         </Link>
-        <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
-        <p className="text-[var(--text-secondary)] text-sm">
-          Continue your DSA learning journey
-        </p>
+        <h1 className="text-2xl font-semibold mb-1">Sign in</h1>
+        <p className="text-sm text-[var(--text-secondary)]">Access your learning workspace</p>
       </div>
 
-      {/* Card */}
-      <div className="glass-card p-8 shadow-2xl border border-white/8">
-        {/* Top gradient line */}
-        <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-violet-500 to-transparent rounded-full mb-7 -mt-1 opacity-60" />
-
-        <form onSubmit={handleSubmit} className="space-y-5" id="login-form">
+      <div className="surface-card">
+        <form onSubmit={handleSubmit} className="space-y-4" id="login-form">
           {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-3.5 rounded-xl bg-red-500/8 border border-red-500/20 text-red-400 text-sm text-center flex items-center justify-center gap-2"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+            <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
               {error}
-            </motion.div>
+            </p>
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
-              Email address
+            <label htmlFor="login-email" className="block text-xs text-[var(--text-muted)] mb-1.5">
+              Email
             </label>
             <input
               id="login-email"
@@ -86,15 +69,15 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-[var(--text-secondary)]">
+            <label htmlFor="login-password" className="block text-xs text-[var(--text-muted)] mb-1.5">
               Password
             </label>
             <div className="relative">
               <input
                 id="login-password"
                 type={showPass ? 'text' : 'password'}
-                className="input-field pr-12"
-                placeholder="Your password"
+                className="input-field pr-10"
+                placeholder="••••••••"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
@@ -103,41 +86,33 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-white transition-colors"
-                id="toggle-password"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          <button
-            id="login-submit"
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-          >
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-2" id="login-submit">
             {loading ? (
-              <><Loader2 size={16} className="animate-spin" /> Signing in...</>
+              <>
+                <Loader2 size={16} className="animate-spin" /> Signing in…
+              </>
             ) : (
-              <>Sign In <ArrowRight size={16} /></>
+              <>
+                Sign in <ArrowRight size={16} />
+              </>
             )}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-            Create one free
+        <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
+          No account?{' '}
+          <Link href="/register" className="text-[var(--brand-400)] hover:underline font-medium">
+            Register
           </Link>
-        </div>
-
-        {/* Feature hints */}
-        <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-center gap-2 text-xs text-[var(--text-muted)]">
-          <Sparkles size={12} className="text-blue-400" />
-          Powered by Gemini AI · Grokking Algorithms · RAG
-        </div>
+        </p>
       </div>
-    </motion.div>
+    </div>
   );
 }

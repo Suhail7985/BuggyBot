@@ -77,7 +77,15 @@ async def preload_all_pdfs():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan — preload PDFs on startup."""
+    from services.config import get_llm_provider, get_embeddings_provider
+
     print("🚀 BuggyBot AI Service starting...")
+    llm = get_llm_provider()
+    emb = get_embeddings_provider()
+    if llm == "none":
+        print("⚠️  WARNING: No OPENAI_API_KEY or GEMINI_API_KEY — chat will fail until .env is configured.")
+    else:
+        print(f"✅ LLM provider: {llm} · Embeddings: {emb}")
     # Run preloading in background so server starts instantly
     asyncio.create_task(preload_all_pdfs())
     yield
@@ -86,7 +94,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="BuggyBot AI Service",
-    description="RAG-powered DSA mentor AI using Gemini + ChromaDB",
+    description="RAG-powered DSA mentor AI using OpenAI + ChromaDB",
     version="1.0.0",
     lifespan=lifespan,
 )

@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-// framer-motion used via motion.div inside child components
 import {
   Plus, MessageSquare, Trash2, Pencil, Check, X,
-  ChevronLeft, Bot, Upload, Settings, LogOut
+  PanelLeftClose, Bot, Upload, Settings, LogOut,
 } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
@@ -16,6 +15,7 @@ import { ChatSummary } from '@/types';
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const activeChatId = params?.id as string | undefined;
 
@@ -30,8 +30,13 @@ export default function Sidebar() {
     chatService.getChatHistory().then(setChats).catch(() => {});
   }, [setChats]);
 
-  const handleNewChat = () => {
-    router.push('/dashboard');
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname, setSidebarOpen]);
+
+  const groupedChats = {
+    today: chats.filter((c) => new Date(c.updatedAt).toDateString() === new Date().toDateString()),
+    earlier: chats.filter((c) => new Date(c.updatedAt).toDateString() !== new Date().toDateString()),
   };
 
   const handleDelete = async (chatId: string, e: React.MouseEvent) => {
@@ -42,23 +47,19 @@ export default function Sidebar() {
       await chatService.deleteChat(chatId);
       removeChat(chatId);
       if (activeChatId === chatId) router.push('/dashboard');
-    } catch {}
+    } catch { /* ignore */ }
     setDeletingId(null);
   };
 
-  const startRename = (chat: ChatSummary, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setRenamingId(chat._id);
-    setRenameValue(chat.title);
-  };
-
   const commitRename = async (chatId: string) => {
-    if (!renameValue.trim()) { setRenamingId(null); return; }
+    if (!renameValue.trim()) {
+      setRenamingId(null);
+      return;
+    }
     try {
       await chatService.renameChat(chatId, renameValue.trim());
       renameChat(chatId, renameValue.trim());
-    } catch {}
+    } catch { /* ignore */ }
     setRenamingId(null);
   };
 
@@ -68,132 +69,131 @@ export default function Sidebar() {
     router.push('/');
   };
 
-  const groupedChats = {
-    today: chats.filter(c => {
-      const d = new Date(c.updatedAt);
-      const now = new Date();
-      return d.toDateString() === now.toDateString();
-    }),
-    earlier: chats.filter(c => {
-      const d = new Date(c.updatedAt);
-      const now = new Date();
-      return d.toDateString() !== now.toDateString();
-    }),
+  const navLink = (href: string, label: string, icon: React.ReactNode) => {
+    const active = pathname === href || pathname.startsWith(`${href}/`);
+    return (
+      <Link
+        href={href}
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
+          active
+            ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)]'
+            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+        }`}
+      >
+        {icon}
+        {label}
+      </Link>
+    );
   };
 
   return (
     <>
-      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="sidebar-overlay md:hidden" onClick={() => setSidebarOpen(false)} aria-hidden />
       )}
 
-      <aside className={`sidebar fixed md:relative z-40 transition-transform duration-300 bg-[var(--bg-secondary)] border-r border-white/5 flex flex-col h-screen overflow-hidden ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
-        {/* Header */}
-        <div className="p-4.5 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200">
-              <Bot size={15} className="text-white" />
+      <aside
+        className={`sidebar sidebar-mobile ${sidebarOpen ? 'open' : ''} md:!translate-x-0`}
+      >
+        <div className="flex items-center justify-between h-14 px-4 border-b border-[var(--border)] flex-shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 min-w-0">
+            <div className="message-avatar assistant w-8 h-8">
+              <Bot size={16} />
             </div>
-            <span className="font-black text-sm tracking-tight text-white group-hover:text-blue-400 transition-colors">BuggyBot</span>
+            <span className="font-semibold text-sm truncate">BuggyBot</span>
           </Link>
           <button
+            type="button"
             onClick={() => setSidebarOpen(false)}
-            className="btn-ghost p-1.5 md:hidden"
+            className="btn-ghost btn-icon md:hidden"
+            aria-label="Close sidebar"
           >
-            <ChevronLeft size={16} />
+            <PanelLeftClose size={18} />
           </button>
         </div>
 
-        {/* New Chat Button */}
-        <div className="p-4">
+        <div className="p-3 flex-shrink-0">
           <button
-            onClick={handleNewChat}
+            type="button"
+            onClick={() => router.push('/dashboard')}
             id="new-chat-btn"
-            className="btn-primary w-full py-2.5 text-sm shadow-md hover:shadow-blue-500/10 font-semibold"
+            className="btn-primary w-full"
           >
-            <Plus size={16} className="stroke-[3]" /> New Chat
+            <Plus size={16} />
+            New chat
           </button>
         </div>
 
-        {/* Chat List */}
-        <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-4">
+        <div className="flex-1 overflow-y-auto px-2 pb-2 min-h-0">
           {chats.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)] text-xs">
-              <MessageSquare size={20} className="mx-auto mb-2.5 opacity-20" />
-              No chats yet. Start a new conversation!
-            </div>
+            <p className="text-center text-xs text-[var(--text-muted)] py-8 px-3">
+              No conversations yet
+            </p>
           ) : (
-            <>
+            <div className="space-y-4">
               {groupedChats.today.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-[var(--text-muted)] px-3 py-1.5 font-bold uppercase tracking-widest bg-white/[0.01] rounded-md mb-1.5">Today</p>
-                  {groupedChats.today.map((chat) => (
-                    <ChatItem
-                      key={chat._id}
-                      chat={chat}
-                      isActive={activeChatId === chat._id}
-                      isRenaming={renamingId === chat._id}
-                      renameValue={renameValue}
-                      onRenameChange={setRenameValue}
-                      onStartRename={startRename}
-                      onCommitRename={commitRename}
-                      onCancelRename={() => setRenamingId(null)}
-                      onDelete={handleDelete}
-                      isDeleting={deletingId === chat._id}
-                    />
-                  ))}
-                </div>
+                <ChatGroup
+                  label="Today"
+                  chats={groupedChats.today}
+                  activeChatId={activeChatId}
+                  renamingId={renamingId}
+                  renameValue={renameValue}
+                  deletingId={deletingId}
+                  onRenameChange={setRenameValue}
+                  onStartRename={(chat, e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setRenamingId(chat._id);
+                    setRenameValue(chat.title);
+                  }}
+                  onCommitRename={commitRename}
+                  onCancelRename={() => setRenamingId(null)}
+                  onDelete={handleDelete}
+                />
               )}
               {groupedChats.earlier.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-[var(--text-muted)] px-3 py-1.5 font-bold uppercase tracking-widest bg-white/[0.01] rounded-md mb-1.5">Earlier</p>
-                  {groupedChats.earlier.map((chat) => (
-                    <ChatItem
-                      key={chat._id}
-                      chat={chat}
-                      isActive={activeChatId === chat._id}
-                      isRenaming={renamingId === chat._id}
-                      renameValue={renameValue}
-                      onRenameChange={setRenameValue}
-                      onStartRename={startRename}
-                      onCommitRename={commitRename}
-                      onCancelRename={() => setRenamingId(null)}
-                      onDelete={handleDelete}
-                      isDeleting={deletingId === chat._id}
-                    />
-                  ))}
-                </div>
+                <ChatGroup
+                  label="Earlier"
+                  chats={groupedChats.earlier}
+                  activeChatId={activeChatId}
+                  renamingId={renamingId}
+                  renameValue={renameValue}
+                  deletingId={deletingId}
+                  onRenameChange={setRenameValue}
+                  onStartRename={(chat, e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setRenamingId(chat._id);
+                    setRenameValue(chat.title);
+                  }}
+                  onCommitRename={commitRename}
+                  onCancelRename={() => setRenamingId(null)}
+                  onDelete={handleDelete}
+                />
               )}
-            </>
+            </div>
           )}
         </div>
 
-        {/* Bottom Nav */}
-        <div className="border-t border-white/5 p-3 space-y-1 bg-white/[0.005]">
-          <Link href="/upload" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-xs font-semibold">
-            <Upload size={14} className="opacity-70" />Upload Book
-          </Link>
-          <Link href="/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-white/5 transition-all text-xs font-semibold">
-            <Settings size={14} className="opacity-70" />Settings
-          </Link>
+        <div className="flex-shrink-0 border-t border-[var(--border)] p-2 space-y-0.5">
+          {navLink('/upload', 'Upload', <Upload size={16} />)}
+          {navLink('/settings', 'Settings', <Settings size={16} />)}
 
-          {/* User */}
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mt-2 border-t border-white/5 pt-3.5 bg-white/[0.01]">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 border border-blue-500/20 flex items-center justify-center text-xs font-black text-blue-400 flex-shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2.5 mt-1 rounded-md">
+            <div className="message-avatar assistant w-8 h-8 text-xs font-semibold">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate text-white leading-none mb-0.5">{user?.name || 'User'}</p>
-              <p className="text-[10px] text-[var(--text-secondary)] truncate leading-none">{user?.email}</p>
+              <p className="text-xs font-medium truncate">{user?.name || 'User'}</p>
+              <p className="text-[11px] text-[var(--text-muted)] truncate">{user?.email}</p>
             </div>
-            <button onClick={handleLogout} className="btn-ghost p-1.5 text-[var(--text-muted)] hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all" title="Logout">
-              <LogOut size={13} />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="btn-ghost btn-icon text-[var(--text-muted)] hover:text-red-400"
+              title="Sign out"
+            >
+              <LogOut size={16} />
             </button>
           </div>
         </div>
@@ -202,7 +202,67 @@ export default function Sidebar() {
   );
 }
 
-interface ChatItemProps {
+function ChatGroup({
+  label,
+  chats,
+  activeChatId,
+  renamingId,
+  renameValue,
+  deletingId,
+  onRenameChange,
+  onStartRename,
+  onCommitRename,
+  onCancelRename,
+  onDelete,
+}: {
+  label: string;
+  chats: ChatSummary[];
+  activeChatId?: string;
+  renamingId: string | null;
+  renameValue: string;
+  deletingId: string | null;
+  onRenameChange: (v: string) => void;
+  onStartRename: (chat: ChatSummary, e: React.MouseEvent) => void;
+  onCommitRename: (id: string) => void;
+  onCancelRename: () => void;
+  onDelete: (id: string, e: React.MouseEvent) => void;
+}) {
+  return (
+    <div>
+      <p className="text-label px-2 mb-1.5">{label}</p>
+      <div className="space-y-0.5">
+        {chats.map((chat) => (
+          <ChatItem
+            key={chat._id}
+            chat={chat}
+            isActive={activeChatId === chat._id}
+            isRenaming={renamingId === chat._id}
+            renameValue={renameValue}
+            onRenameChange={onRenameChange}
+            onStartRename={onStartRename}
+            onCommitRename={onCommitRename}
+            onCancelRename={onCancelRename}
+            onDelete={onDelete}
+            isDeleting={deletingId === chat._id}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatItem({
+  chat,
+  isActive,
+  isRenaming,
+  renameValue,
+  onRenameChange,
+  onStartRename,
+  onCommitRename,
+  onCancelRename,
+  onDelete,
+  isDeleting,
+}: {
   chat: ChatSummary;
   isActive: boolean;
   isRenaming: boolean;
@@ -213,25 +273,20 @@ interface ChatItemProps {
   onCancelRename: () => void;
   onDelete: (id: string, e: React.MouseEvent) => void;
   isDeleting: boolean;
-}
-
-function ChatItem({
-  chat, isActive, isRenaming, renameValue, onRenameChange,
-  onStartRename, onCommitRename, onCancelRename, onDelete, isDeleting
-}: ChatItemProps) {
+}) {
   return (
     <Link
       href={`/chat/${chat._id}`}
-      className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all mb-1 border ${
+      className={`group flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors ${
         isActive
-          ? 'bg-blue-500/10 border-blue-500/25 text-white shadow-sm shadow-blue-500/5'
-          : 'border-transparent text-[var(--text-secondary)] hover:bg-white/5 hover:text-white'
+          ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)]'
+          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]'
       }`}
     >
-      <MessageSquare size={13} className={`flex-shrink-0 ${isActive ? 'text-blue-400 opacity-100' : 'opacity-50 group-hover:opacity-85'}`} />
+      <MessageSquare size={14} className="flex-shrink-0 opacity-60" />
 
       {isRenaming ? (
-        <div className="flex-1 flex items-center gap-1" onClick={(e) => e.preventDefault()}>
+        <div className="flex-1 flex items-center gap-1 min-w-0" onClick={(e) => e.preventDefault()}>
           <input
             value={renameValue}
             onChange={(e) => onRenameChange(e.target.value)}
@@ -239,32 +294,30 @@ function ChatItem({
               if (e.key === 'Enter') onCommitRename(chat._id);
               if (e.key === 'Escape') onCancelRename();
             }}
-            className="flex-1 bg-transparent border border-blue-500/40 rounded px-1.5 py-0.5 text-xs outline-none"
+            className="flex-1 min-w-0 input-field py-1 text-xs"
             autoFocus
           />
-          <button onClick={() => onCommitRename(chat._id)} className="text-green-400 hover:text-green-300">
-            <Check size={12} />
+          <button type="button" onClick={() => onCommitRename(chat._id)} className="btn-ghost btn-icon">
+            <Check size={14} />
           </button>
-          <button onClick={onCancelRename} className="text-red-400 hover:text-red-300">
-            <X size={12} />
+          <button type="button" onClick={onCancelRename} className="btn-ghost btn-icon">
+            <X size={14} />
           </button>
         </div>
       ) : (
         <>
-          <span className="flex-1 truncate">{chat.title}</span>
-          <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={(e) => onStartRename(chat, e)}
-              className="text-[var(--text-muted)] hover:text-white p-0.5"
-            >
-              <Pencil size={11} />
+          <span className="flex-1 truncate text-xs font-medium">{chat.title}</span>
+          <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
+            <button type="button" onClick={(e) => onStartRename(chat, e)} className="btn-ghost p-1">
+              <Pencil size={12} />
             </button>
             <button
+              type="button"
               onClick={(e) => onDelete(chat._id, e)}
               disabled={isDeleting}
-              className="text-[var(--text-muted)] hover:text-red-400 p-0.5"
+              className="btn-ghost p-1 hover:text-red-400"
             >
-              <Trash2 size={11} />
+              <Trash2 size={12} />
             </button>
           </div>
         </>

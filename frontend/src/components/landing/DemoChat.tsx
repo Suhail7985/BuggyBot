@@ -1,168 +1,188 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SendHorizonal, Bot, User } from 'lucide-react';
-import { EXAMPLE_QUESTIONS } from '@/constants';
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { SendHorizonal, Bot, User, StopCircle, BookOpen, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-const demoResponses: Record<string, string> = {
-  default: `Great question! 🎯 Let me break this down for you.
-
-**Binary Search** is like looking up a word in a dictionary — you don't start from page 1, you open to the middle!
-
-**How it works:**
-1. Look at the middle element
-2. If it's your target → done! ✅
-3. If target is smaller → search left half
-4. If target is larger → search right half
-5. Repeat until found (or list is empty)
-
-\`\`\`python
-def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid        # Found it!
-        elif arr[mid] < target:
-            left = mid + 1    # Search right half
-        else:
-            right = mid - 1   # Search left half
-    
-    return -1  # Not found
-\`\`\`
-
-**⏱️ Complexity:**
-- Time: **O(log n)** — halves the search space each step
-- Space: **O(1)** — no extra memory needed
-
-**Key insight:** With 1 billion items, binary search takes at most **30 steps**. Linear search? 1 billion. That's the power of O(log n)! 🚀`,
-};
 
 interface DemoMessage {
   role: 'user' | 'assistant';
   content: string;
+  citations?: { chapter: string; page?: number; excerpt: string }[];
 }
+
+const SUGGESTIONS = [
+  'Explain binary search and its time complexity.',
+  'Compare BFS and DFS on graphs.',
+  'What is Big O notation?',
+];
 
 export default function DemoChat() {
   const [messages, setMessages] = useState<DemoMessage[]>([
     {
       role: 'assistant',
-      content: "Hey! I'm BuggyBot 🤖 Your chaotic but genius DSA mentor. Ask me anything about Grokking Algorithms — or click a suggestion below!",
+      content:
+        'Welcome. I can help with data structures, algorithms, and debugging. Ask a question to begin.',
     },
   ]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  const simulateResponse = (question: string) => {
-    const response = demoResponses.default;
-    setIsTyping(true);
-    setMessages((prev) => [...prev, { role: 'user', content: question }]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-    let displayed = '';
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i >= response.length) {
-        clearInterval(interval);
-        setIsTyping(false);
-        return;
-      }
-      displayed += response[i];
-      i += 3;
-      setMessages((prev) => {
-        const updated = [...prev];
-        const lastMsg = updated[updated.length - 1];
-        if (lastMsg?.role === 'assistant' && updated.length > 1) {
-          updated[updated.length - 1] = { ...lastMsg, content: displayed };
-        } else {
-          updated.push({ role: 'assistant', content: displayed });
-        }
-        return updated;
-      });
-    }, 20);
-  };
+  const handleSend = async (override?: string) => {
+    const msg = (override ?? input).trim();
+    if (!msg || isStreaming) return;
 
-  const handleSend = () => {
-    if (!input.trim() || isTyping) return;
-    const q = input;
     setInput('');
-    simulateResponse(q);
+    setIsStreaming(true);
+    const history = messages.map((m) => ({ role: m.role, content: m.content }));
+    setMessages((prev) => [...prev, { role: 'user', content: msg }]);
+
+    let accumulated = '';
+    let pendingCitations: DemoMessage['citations'] = [];
+    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const res = await fetch('/api/ai/rag/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          message: msg,
+          chatHistory: history,
+          mode: 'chat',
+          collectionName: 'grokking_algorithms',
+        }),
+      });
+
+      if (!res.ok || !res.body) throw new Error('unreachable');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const raw = line.slice(5).trim();
+          if (raw === '[DONE]') return;
+
+          try {
+            const evt = JSON.parse(raw);
+            if (evt.type === 'token' && evt.content) {
+              accumulated += evt.content;
+              const snap = accumulated;
+              const cits = pendingCitations;
+              setMessages((prev) => {
+                const next = [...prev];
+                next[next.length - 1] = { role: 'assistant', content: snap, citations: cits };
+                return next;
+              });
+            } else if (evt.type === 'citations') {
+              pendingCitations = evt.citations;
+            }
+          } catch {
+            /* skip */
+          }
+        }
+      }
+    } catch (err: unknown) {
+      if ((err as Error).name !== 'AbortError') {
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = {
+            role: 'assistant',
+            content: '**Service unavailable.** Ensure the AI service is running on port 8000.',
+          };
+          return next;
+        });
+      }
+    } finally {
+      setIsStreaming(false);
+      abortRef.current = null;
+    }
   };
 
   return (
-    <div className="glass-card overflow-hidden" style={{ height: '520px', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5 bg-white/[0.01]">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-md shadow-blue-500/20 animate-pulse">
-          <Bot size={16} className="text-white" />
+    <div className="surface flex flex-col overflow-hidden" style={{ height: '480px' }}>
+      <div className="flex items-center justify-between px-4 h-12 border-b border-[var(--border)] flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="message-avatar assistant w-7 h-7">
+            <Bot size={14} />
+          </div>
+          <span className="text-sm font-medium">Demo chat</span>
         </div>
-        <div>
-          <p className="font-semibold text-sm">BuggyBot</p>
-          <p className="text-xs text-[var(--text-muted)]">DSA AI Mentor · Online</p>
-        </div>
-        <div className="ml-auto flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-[10px] font-semibold text-green-400 tracking-wider uppercase">Demo Mode</span>
-        </div>
+        <span className="text-[11px] text-[var(--text-muted)] px-2 py-0.5 rounded-full border border-[var(--border)]">
+          Preview
+        </span>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-white/[0.005]">
-        <AnimatePresence initial={false}>
-          {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-            >
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.role === 'user'
-                  ? 'bg-gradient-to-br from-blue-500 to-violet-600 shadow-md shadow-blue-500/20'
-                  : 'bg-[var(--bg-card-hover)] border border-white/10'
-              }`}>
-                {msg.role === 'user' ? <User size={13} /> : <Bot size={13} />}
-              </div>
-              <div className={msg.role === 'user' ? 'chat-message-user' : 'chat-message-ai'}>
-                {msg.role === 'user' ? (
-                  <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                ) : (
-                  <div className="prose prose-sm max-w-none text-[var(--text-primary)]">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {isTyping && messages[messages.length - 1]?.role !== 'assistant' && (
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-[var(--bg-card-hover)] border border-white/10 flex items-center justify-center">
-              <Bot size={13} />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        {messages.map((msg, i) => (
+          <div key={i} className={`message-row ${msg.role === 'user' ? 'user' : ''}`}>
+            <div className={`message-avatar ${msg.role === 'user' ? 'user' : 'assistant'}`}>
+              {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
             </div>
-            <div className="chat-message-ai flex items-center gap-1.5 py-3">
-              <div className="typing-dot" />
-              <div className="typing-dot" />
-              <div className="typing-dot" />
+            <div className={`message-body ${msg.role === 'user' ? 'user' : ''}`}>
+              {msg.role === 'user' ? (
+                <div className="chat-message-user">
+                  <p className="text-sm">{msg.content}</p>
+                </div>
+              ) : msg.content === '' ? (
+                <div className="analyzing-status">
+                  <Loader2 size={14} className="analyzing-spinner" aria-hidden />
+                  <span>Analyzing…</span>
+                </div>
+              ) : (
+                <div className="chat-message-ai prose prose-sm max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  {msg.citations && msg.citations.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3 not-prose">
+                      {msg.citations.slice(0, 3).map((c, ci) => (
+                        <span
+                          key={ci}
+                          className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border border-[var(--border)] text-[var(--text-muted)]"
+                        >
+                          <BookOpen size={10} />
+                          {c.chapter}
+                          {c.page != null ? ` · p.${c.page}` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        )}
+        ))}
+        <div ref={bottomRef} />
       </div>
 
-      {/* Suggestions */}
       {messages.length === 1 && (
-        <div className="px-4 pb-2 flex flex-wrap gap-2">
-          {EXAMPLE_QUESTIONS.slice(0, 3).map((q) => (
+        <div className="px-4 pb-2 flex flex-wrap gap-2 flex-shrink-0">
+          {SUGGESTIONS.map((q) => (
             <button
               key={q}
-              onClick={() => simulateResponse(q)}
-              className="text-xs px-3 py-1.5 rounded-full glass border border-white/10 text-[var(--text-secondary)] hover:text-white hover:border-white/20 transition-all"
+              type="button"
+              onClick={() => handleSend(q)}
+              disabled={isStreaming}
+              className="text-xs px-3 py-1.5 rounded-md border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[#3f3f46] disabled:opacity-50"
             >
               {q}
             </button>
@@ -170,30 +190,49 @@ export default function DemoChat() {
         </div>
       )}
 
-      {/* Input */}
-      <div className="p-4 border-t border-white/5">
-        <div className="flex gap-3 items-center">
+      <div className="p-3 border-t border-[var(--border)] flex-shrink-0">
+        <div className="composer-box">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Ask BuggyBot about DSA..."
-            className="input-field flex-1"
+            placeholder={isStreaming ? 'Analyzing your question…' : 'Ask a question…'}
+            className="composer-textarea"
+            disabled={isStreaming}
             id="demo-chat-input"
           />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className="btn-primary px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-            id="demo-send-btn"
-          >
-            <SendHorizonal size={16} />
-          </button>
+          {isStreaming ? (
+            <button
+              type="button"
+              onClick={() => abortRef.current?.abort()}
+              className="btn-ghost btn-icon text-red-400"
+            >
+              <StopCircle size={18} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSend()}
+              disabled={!input.trim()}
+              className="btn-primary btn-icon disabled:opacity-40"
+            >
+              <SendHorizonal size={18} />
+            </button>
+          )}
         </div>
-        <p className="text-center text-xs text-[var(--text-muted)] mt-2">
-          This is a demo preview.{' '}
-          <a href="/register" className="text-blue-400 hover:underline">Sign up</a> for full AI responses.
-        </p>
+        {isStreaming ? (
+          <p className="text-[11px] text-center text-[var(--brand-400)] mt-2 flex items-center justify-center gap-1.5">
+            <Loader2 size={12} className="analyzing-spinner" />
+            Analyzing…
+          </p>
+        ) : (
+          <p className="text-[11px] text-center text-[var(--text-muted)] mt-2">
+            <Link href="/register" className="text-[var(--brand-400)] hover:underline">
+              Sign up
+            </Link>{' '}
+            to save conversations
+          </p>
+        )}
       </div>
     </div>
   );
